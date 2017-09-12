@@ -1,15 +1,37 @@
 .App {
   text-align: left;
 }
-
 .App-header {
   background-color: #222;
   height: 75px;
   padding: 20px;
   color: white;
 }
-
+.navbar-default { 
+  padding-left: 20px;
+  display: flex;
+  margin-bottom: auto;
+  align-items: left;
+  justify-content: bottom;
+  margin-bottom: auto; 
+}
+h2 {
+  width: 100px;
+}
 .App-intro {
   font-size: large;
 }
-
+td {
+  padding: 0 8px 0 0;
+}
+.table {
+  padding-left: 20px;
+  padding-top: 20px;
+}
+.search {
+  margin-bottom: auto; 
+  padding-top: 25px;
+}
+.search form {
+  padding-right: 5px
+}
