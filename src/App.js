@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
+const _ = require('underscore');
 // fetch('https://api.cryptonator.com/api/full/btc-usd').then((res) => res.json()).then((json) => console.log(json));
 
 class App extends Component {
@@ -8,20 +9,19 @@ class App extends Component {
     this.state = {
       display: 'master',
       masterData: [],
+      filteredData: [],
       individualData: [],
       searchValue: ''
     }
     this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
   }
-  handleSubmit(event) {
+  getIndividualData() {
     fetch('https://api.cryptonator.com/api/full/' + this.state.searchValue + '-usd')
       .then((res) => {
         res.json()
         alert('then')
       })
       .then((json) => {
-        alert('????')
         console.log(json)
         this.setState({
           individualData: json,
@@ -30,25 +30,37 @@ class App extends Component {
     });
   }
   handleChange(event) {
-    this.setState({searchValue: event.target.value});
+    this.setState({
+      searchValue: event.target.value,
+      filteredData: this.state.masterData.filter( (listValue) => {
+        return listValue.name.toLowerCase().includes(this.state.searchValue.toLowerCase()) || 
+               listValue.symbol.toLowerCase().includes(this.state.searchValue.toLowerCase())
+      })
+    });
   }
   getData() {
     fetch('https://api.coinmarketcap.com/v1/ticker/')
       .then((res) => res.json())
       .then((json) => {
-        this.setState({masterData: json})
+        this.setState({
+          masterData: json,
+        })
     });
   }
   componentWillMount() {
     this.getData()
   }
   render() {
-    var table = <Table masterData={this.state.masterData} display={this.state.display} individualData={this.state.individualData} />
-    if(this.state.display === 'individual') {
-      table = () => {
-        return <T2 />
-      }
+    var displayData = this.state.masterData;
+    if(!_.isEqual(this.state.filteredData,[])) {
+      displayData = this.state.filteredData;
     }
+    var table = <Table filteredData={displayData} display={this.state.display} individualData={this.state.individualData} />
+    // if(this.state.display === 'individual') {
+    //   table = () => {
+    //     return <T2 />
+    //   }
+    // }
     return (
       <div className="App">
         <div className="navbar navbar-default">
@@ -58,7 +70,6 @@ class App extends Component {
               Search:<br></br> 
               <input type="text" value={this.state.searchValue} onSubmit={this.handleSubmit} onChange={this.handleChange} />
             </label>
-            <input type="submit" value="Submit" onSubmit={this.handleSubmit} />
           </form>
         </div>
         <div className="table">
@@ -70,29 +81,41 @@ class App extends Component {
 }
 
 class Table extends Component {
-  sortPrice(){ 
+  constructor() {
+    super()
+    this.state = {
+      data: []
+    }
+  }
+  sortPrice() { 
     this.setState({
-          masterData: this.props.masterData.sort(function(a, b) {
+        data: this.state.data.sort(function(a, b) {
           return b.price_usd - a.price_usd;
         })
     })
-    console.log('set state')
   }
   sortMarketCap(){
     this.setState({
-      masterData: this.props.masterData.sort(function(a,b) {
+      masterData: this.state.data.sort(function(a,b) {
         return b.market_cap_usd - a.market_cap_usd;
       })
     })
   }
   sortName(){
     this.setState({
-      masterData: this.props.masterData.sort(function(a, b) {
+      masterData: this.state.data.sort(function(a, b) {
         if(a.name < b.name) return -1;
         if(a.name > b.name) return 1;
         return 0;
       })
     })
+  }
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.filteredData !== this.state.data) {
+      this.setState({
+        data: nextProps.filteredData
+      })
+    } 
   }
   render() {
     return (
@@ -105,7 +128,7 @@ class Table extends Component {
           </tr>
         </thead>
           { 
-            this.props.masterData.map((listValue, i) => {
+            this.props.filteredData.map((listValue, i) => {
               return  <tbody key={i} className='parent'>
                         <tr>
                           <td className='child'>{listValue.name + ' (' + listValue.symbol + ')' }</td>
